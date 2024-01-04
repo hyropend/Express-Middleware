@@ -1,17 +1,30 @@
-const express = require("express");
-const app = express();
+const express = require("express")
+const app = express()
+
+app.use(loggingMiddleware)
 
 
-app.set("viwe engine","ejs");
+app.get("/", (req, res) => {
+  res.send("Home Page")
+})
 
-app.get('/', (req,res)=>{
-    console.log('hi');
-    //res.send('welcome');
-    //res.status(500).send("hi");  insted of ".send" we can use ".json({message:"error"})"
-    res.render("index",{text: "world"});
+app.get("/users", authorizeUsersAccess, (req, res) => {
+  console.log(req.admin)
+  res.send("Users Page")
+})
 
-});
+function loggingMiddleware(req, res, next) {
+  console.log(`${new Date().toISOString()}: ${req.originalUrl}`)
+  next();
+}
 
-const userRouter = require("./routes/users");
-app.use('/users',userRouter); //inside the users.js, request methods will work with "users"
-app.listen(3000);
+function authorizeUsersAccess(req, res, next) {
+  if (req.query.admin === "true") {
+    req.admin = true
+    next()
+  } else {
+    res.send("ERROR: You must be an admin")
+  }
+}
+
+app.listen(3000, () => console.log("Server Started"))
